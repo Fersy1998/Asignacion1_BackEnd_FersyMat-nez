@@ -2,8 +2,6 @@ const { Router }= require('express');
 const {db} =require('../firebaseConfig');
 const router=Router();
 
-
-let globalRate=[];
 //obtener los productos
 router.get('/api/products', async(req, res)=>{
     try {
@@ -22,7 +20,6 @@ router.get('/api/products', async(req, res)=>{
         const posts = []
         for (const producto of toRecoletRate) {
           const myRate = await getRate(producto.id);
-          console.log('myRATE',myRate);
           posts.push(myRate);
         }
         let i=0;
@@ -132,7 +129,18 @@ router.post('/api/products-comment/:product_id', async(req,res)=>{
     
     try {
         db.collection(`productos/${req.params.product_id}/comments`).doc().create({...req.body})
-        return res.status(200).json({ok:true, message:'Comentario guardado exitosamente'});
+        //obteniendo los comentarios
+        const query=db.collection(`productos/${req.params.product_id}/comments`);
+        const querySnapshot=await query.get();
+        const response=querySnapshot.docs;
+        let comments=[];
+        response.map(doc=>{
+            comments.push({
+                id:doc.id,
+                ...doc.data()
+            })
+         })
+        return res.status(200).json({ok:true, message:'Comentario guardado exitosamente', data: comments});
     } catch (error) {
         console.log(error);
         return res.status(400).json({ok:false, message:"Algo salió mal al guardar el comentario"});
@@ -141,17 +149,38 @@ router.post('/api/products-comment/:product_id', async(req,res)=>{
 //calificar
 router.post('/api/products-rate/:product_id', async(req,res)=>{
     try {
-        db.collection(`productos/${req.params.product_id}/rate`).doc().create({...req.body})
-        return res.status(200).json({ok:true, message:'Calificación guardada exitosamente'});
+        db.collection(`productos/${req.params.product_id}/rate`).doc().create({...req.body});
+         //obteniendo las calificaciones
+         const query=db.collection(`productos/${req.params.product_id}/rate`);
+         const querySnapshot=await query.get();
+         const response=querySnapshot.docs;
+         let rate=[];
+        response.map(doc=>{
+            rate.push(
+                doc.data().calification
+            )
+        })
+        return res.status(200).json({ok:true, message:'Calificación guardada exitosamente', data:rate});
     } catch (error) {
         console.log(error);
         return res.status(400).json({ok:false, message:"Algo salió mal al guardar la calificación"});
     }
 })
+
 router.post('/api/products-users/:product_id', async(req,res)=>{
     try {
         db.collection(`productos/${req.params.product_id}/users`).doc().create({...req.body})
-        return res.status(200).json({ok:true, message:'usuario guardado exitosamente'});
+         //obteniendo los comentarios
+         const query=db.collection(`productos/${req.params.product_id}/users`);
+         const querySnapshot=await query.get();
+         const response=querySnapshot.docs;
+         let users=[];
+         response.map(doc=>{
+              users.push(
+                 doc.data().uid
+              )
+          })
+        return res.status(200).json({ok:true, message:'usuario guardado exitosamente', data:users});
     } catch (error) {
         console.log(error);
         return res.status(400).json({ok:false, message:"Algo salió mal al guardar el usuario"});
