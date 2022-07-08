@@ -14,7 +14,6 @@ router.get('/api/products', async(req, res)=>{
             id:doc.id,
             ...doc.data()
         }))
-        
         let toRecoletRate=response;
     
         const posts = []
